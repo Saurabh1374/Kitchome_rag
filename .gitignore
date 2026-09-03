@@ -66,3 +66,6 @@ coverage.xml
 vector_store_data.json
 data/processed/*
 !data/processed/.gitkeep
+
+# Internal Project Documentation
+project_details.md
