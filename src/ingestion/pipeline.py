@@ -18,13 +18,15 @@ class IngestionPipeline:
         vector_store: Optional[NamespaceVectorStore] = None,
         chunker: Optional[TextChunker] = None,
         summarizer: Optional[DocumentSummarizer] = None,
-        embedder: Optional[EmbeddingEngine] = None
+        embedder: Optional[EmbeddingEngine] = None,
+        index_summary_chunk: bool = False
     ):
         self.router = router or SkillsRouter()
         self.vector_store = vector_store or NamespaceVectorStore()
         self.chunker = chunker or TextChunker()
         self.summarizer = summarizer or DocumentSummarizer()
         self.embedder = embedder or EmbeddingEngine()
+        self.index_summary_chunk = index_summary_chunk
 
     def ingest_document(self, document: RawDocument) -> Dict[str, Any]:
         """
@@ -69,10 +71,16 @@ class IngestionPipeline:
         texts = [c.text for c in text_chunks]
         embeddings = self.embedder.embed_batch(texts)
 
-        # 6. Construct VectorChunks for vector store with summary attached to metadata
+        # 6. Construct VectorChunks for vector store with summary and security attached to metadata
         vector_chunks = []
         for tc, emb in zip(text_chunks, embeddings):
             tc.metadata["doc_summary"] = doc_summary
+            tc.metadata["document_title"] = document.title
+            tc.metadata["access_tier"] = document.access_tier
+            tc.metadata["tenant_id"] = document.tenant_id
+            tc.metadata["clearance_level"] = document.clearance_level
+            tc.metadata["is_summary"] = False
+            tc.metadata["chunk_type"] = "content"
             vector_chunks.append(VectorChunk(
                 chunk_id=tc.chunk_id,
                 document_id=tc.document_id,
@@ -80,6 +88,26 @@ class IngestionPipeline:
                 text=tc.text,
                 metadata=tc.metadata,
                 embedding=emb
+            ))
+
+        # Optional Dual-Resolution: Index document summary as a first-class chunk
+        if self.index_summary_chunk and doc_summary:
+            summary_emb = self.embedder.embed_text(doc_summary)
+            vector_chunks.append(VectorChunk(
+                chunk_id=f"summary_{document.document_id}",
+                document_id=document.document_id,
+                namespace=target_namespace,
+                text=doc_summary,
+                metadata={
+                    "is_summary": True,
+                    "chunk_type": "document_summary",
+                    "document_title": document.title,
+                    "access_tier": document.access_tier,
+                    "tenant_id": document.tenant_id,
+                    "clearance_level": document.clearance_level,
+                    "doc_summary": doc_summary
+                },
+                embedding=summary_emb
             ))
 
         # 7. Upsert into vector store under target namespace

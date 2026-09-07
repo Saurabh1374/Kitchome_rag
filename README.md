@@ -140,11 +140,123 @@ Every ingested document is indexed in two complementary resolutions:
 
 ---
 
-### 2.5. Decoupled Ingestion Service (Producer)
-* Operates as an independent worker running **Progressive 700+150 Token Summarization**.
-* Compresses raw blocks into concise summaries and purges verbosity upon reaching the buffer limit.
-* Attaches security descriptors (`access_tier`, `tenant_id`) during indexing.
-* **Registry Hygiene**: Keeps routing keywords in `skills_registry.json` clean and free from arbitrary document keyword contamination.
+### 2.5. Event-Driven Controller-Worker Ingestion Architecture
+
+For enterprise-scale documents (e.g., 500-page user guides), synchronous processing triggers HTTP gateway timeouts (504s) and risks memory exhaustion. The system implements a **Database-Backed Event-Driven Controller-Worker Architecture** that slashes processing time to 3–5 minutes without requiring external message brokers (like Redis or Celery).
+
+```mermaid
+flowchart TD
+    subgraph Intake ["1. Document Intake (Non-Blocking SLA < 10ms)"]
+        FileDrop[Channel A: Folder Drop\ndata/appliances/blender.md]
+        APIUpload[Channel B: REST API\nPOST /api/v1/ingest]
+    end
+
+    subgraph CursorGate ["2. Cursor as Gatekeeper (Idempotency & Versioning)"]
+        FileDrop --> ComputeHash[Compute SHA-256 Hash]
+        APIUpload --> ComputeHash
+        ComputeHash --> CheckCursor{Check ingestion_cursor\nHash matches ACTIVE doc?}
+        CheckCursor -- "YES (Unchanged)" --> SkipIngest([Bypass & Skip\n0 Compute Wasted])
+        CheckCursor -- "NO (New or Modified)" --> GetVersion[Read previous version from Cursor\nSet new_version = current + 1]
+    end
+
+    subgraph ControllerQueue ["3. Controller & DB-Backed Queue (Zero Redis/Celery Overhead)"]
+        GetVersion --> CreateJob["INSERT INTO ingestion_queue\nchunk_job_id = cjob_123, status = 'PENDING'\nINSERT INTO ingestion_chunk_jobs\nexpected_chunks = N, status = 'PENDING'"]
+        CreateJob --> HTTPResp([HTTP 202 Accepted\nReturns job_id in < 10ms])
+        CreateJob --> WorkerClaim["Worker Claims Job\n(FOR UPDATE SKIP LOCKED - Pessimistic Lock)"]
+    end
+
+    subgraph WorkerCompute ["4. Worker Execution (O(1) Streaming & Dynamic Lease Renewal)"]
+        WorkerClaim --> S1[Stage 1: PARSING\nText Extract via Context Managers]
+        S1 --> S2[Stage 2: SUMMARIZATION\nProgressive Buffer Purge at 850 Tokens]
+        S2 --> S3["Stage 3: CHUNKING\nStream mini-batches (32 chunks)\nUpdate ingestion_chunk_jobs (chunked_count = N)"]
+        S3 --> S4["Stage 4: EMBEDDING\nBatch Vectorization\nHeartbeat: renew crash_recovery_timeout_at"]
+        
+        S1 -.->|Fail| ErrorLog[Record failed_stage & reason]
+        S2 -.->|Fail| ErrorLog
+        S3 -.->|Fail| ErrorLog
+        S4 -.->|Fail| ErrorLog
+        ErrorLog --> RetryCheck{retry_count < 3?}
+        RetryCheck -- Yes --> Requeue[Re-queue with Backoff]
+        RetryCheck -- No --> Exhausted[FAILED_RETRY_EXHAUSTED\nHalt & Await Manual Retry]
+        Requeue --> CreateJob
+    end
+
+    subgraph RecoverySweeper ["5. Worker Registry & Crash Recovery Sweeper"]
+        WorkerHeartbeat[Worker Registry: ingestion_workers\nTracks liveness every 15-30s]
+        Sweeper[Background Sweeper Loop:\nDetects NOW() > crash_recovery_timeout_at\nAND worker DEAD]
+        Sweeper --> CheckChunkTable{Chunk Job status == 'CHUNKED'?}
+        CheckChunkTable -- Yes --> RapidResume[Skip re-chunking!\nResume directly from embedding]
+        CheckChunkTable -- No --> FullRetry[Re-queue to PENDING]
+    end
+
+    subgraph Stage5Commit ["6. Stage 5: Atomic State Flip (Zero Downtime)"]
+        S4 --> AtomicTx["BEGIN TRANSACTION (< 10ms);\n1. UPDATE kitchome_chunks SET is_latest = false WHERE doc_family = :fam AND job_id != :job_id;\n2. UPDATE kitchome_chunks SET is_latest = true WHERE metadata.job_id = :job_id;\n3. Advance ingestion_cursor (v2 is ACTIVE, v1 is ARCHIVED);\n4. UPDATE ingestion_queue SET status = 'COMPLETED';\n5. Purge ephemeral staging rows in ingestion_job_chunks;\nCOMMIT;"]
+    end
+
+    subgraph Storage ["7. Vector Storage & Cursor State"]
+        AtomicTx --> VectorStore[("pgvector Store\n- v1 Chunks: is_latest = false (Archived)\n- v2 Chunks: is_latest = true (Active)")]
+        AtomicTx --> CursorTable[("ingestion_cursor\nDocument Catalog")]
+    end
+
+    subgraph QuashFlow ["8. User-Driven Quash Flow (Zero Clutter)"]
+        UserQuash[User: POST /documents/v1/quash] --> DoQuash["1. DELETE FROM kitchome_chunks WHERE document_id = :v1;\n2. UPDATE ingestion_cursor SET status = 'QUASHED';"]
+        DoQuash --> VectorStore
+        DoQuash --> CursorTable
+    end
+
+    style CursorGate fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style ControllerQueue fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
+    style Stage5Commit fill:#e8f8f5,stroke:#27ae60,stroke-width:2px
+    style RecoverySweeper fill:#f1f8e9,stroke:#558b2f,stroke-width:2px
+    style QuashFlow fill:#fbe9e7,stroke:#c62828,stroke-width:2px
+```
+
+#### Why DB-Backed Async Queue (`SKIP LOCKED`) Over Celery & Redis:
+1. **Zero External Infrastructure**: Celery requires deploying, monitoring, and maintaining an external Redis or RabbitMQ cluster. Our architecture reuses PostgreSQL with zero extra services.
+2. **ACID Transaction Atomicity**: In Celery, task state (Redis) and vector state (Postgres) live in two separate systems that can desynchronize. In our system, the job completion, cursor advance, and vector write occur in **one atomic database transaction**.
+3. **Pessimistic Non-Blocking Locks**: Workers claim jobs via `SELECT ... FOR UPDATE SKIP LOCKED`, guaranteeing that multiple concurrent workers never process the same file, with zero thread contention or deadlocks.
+
+---
+
+### 2.6. Multi-Table Schema & Document Lifecycle
+
+```
+[ Table 1: ingestion_cursor (Permanent) ]              [ Table 2: ingestion_queue (Orchestration) ]
+- document_id (PK)                                     - job_id (PK)
+- file_path (UNIQUE)                                   - document_id (FK)
+- content_hash (SHA-256)                               - doc_family & version
+- version (e.g. 1, 2)                                  - chunk_job_id (FK to chunk jobs)
+- is_latest (bool)                                     - status: PENDING | PROCESSING | COMPLETED |
+- status: ACTIVE | ARCHIVED | QUASHED                               FAILED | FAILED_RETRY_EXHAUSTED
+- chunks_count                                         - current_stage & failed_stage
+- created_at & updated_at                              - worker_id & crash_recovery_timeout_at
+
+[ Table 3: ingestion_chunk_jobs (Chunk Ledger) ]       [ Table 4: ingestion_workers (Registry & Health) ]
+- chunk_job_id (PK)                                    - worker_id (PK)
+- job_id (FK to queue)                                 - hostname & pid
+- expected_chunks (estimated upfront)                  - status: IDLE | BUSY | OFFLINE | DEAD
+- chunked_count (progress counter)                     - current_job_id
+- chunk_ids (JSON UUID array)                          - last_heartbeat_at
+- status: PENDING | CHUNKING | CHUNKED |               - tasks_completed
+          EMBEDDING | COMPLETED | FAILED
+```
+
+#### The 3-Tier Document Lifecycle:
+1. **`ACTIVE` (`is_latest = true`)**: Live chunks in `pgvector`. Target of all default RAG queries.
+2. **`ARCHIVED` (`is_latest = false`)**: Chunks remain in `pgvector` but are ignored by standard searches, **eradicating the "KNN Duplicate Swarm" problem**. Only retrieved if a user explicitly requests a dated version.
+3. **`QUASHED` (Purged from Vector DB)**: When a user deactivates an old version, chunks are physically purged (`DELETE FROM kitchome_chunks WHERE doc_id = ...`) to free HNSW index memory, while `ingestion_cursor` preserves an immutable audit record.
+
+#### Decoupled Two Worker Pools & Swarm Embedding (Model 1):
+* **Worker Pool 1 (`ChunkerWorker`)**: Dedicated parsing, summarization, and chunking. Streams mini-batches ($O(1)$ memory) into the ephemeral staging ledger `ingestion_job_chunks` (`is_embedded = 0`), locks the `actual_total_chunks` ground truth into `ingestion_chunk_jobs`, and transitions the document to `READY_FOR_EMBED`.
+* **Worker Pool 2 (`EmbedderWorker` Swarm)**: Horizontally scalable GPU/compute workers that concurrently claim 32-chunk batches via `SKIP LOCKED` (`is_embedded = 0` $\rightarrow$ `is_embedded = 2`). Computes embeddings and executes a clean `INSERT INTO kitchome_chunks` with `embedding NOT NULL` and `is_latest = false` (Model 1: zero MVCC dead-tuple bloat, zero nullable embeddings).
+* **Ground-Truth Validation & Barrier Synchronization**: Overcomes intake heuristic estimation discrepancies (`expected_chunks`). When an embedder completes a batch, it increments `embedded_count`. When `embedded_count == actual_total_chunks` and 0 unfinished chunks remain in staging, the final finisher executes **Stage 5 Atomic State Flip** (`is_latest = true`, commits the cursor version, purges `ingestion_job_chunks`, and marks document `COMPLETED`).
+* **Unified Mode (`IngestionWorker`)**: Operates seamlessly in single-node/dev environments by orchestrating `ChunkerWorker` and `EmbedderWorker` internally to completion.
+
+#### Worker Health Check & Dynamic Crash Recovery:
+* **Active Worker Pool**: `get_available_workers(timeout_seconds=60)` scans `ingestion_workers`, automatically flagging nodes that missed heartbeats as `DEAD`.
+* **Dynamic Lease Extension**: For heavy 500-page files taking minutes, the worker continuously renews `crash_recovery_timeout_at` during mini-batch embedding, ensuring active workers are never killed prematurely.
+* **Rapid Crash Recovery**: The sweeper detects expired leases and dead workers. If the chunk job is already marked `status = 'CHUNKED'`, the recovering worker skips text splitting and resumes directly from embedding without repeating work. Expired batch leases (`is_embedded = 2`) are automatically reclaimed by healthy swarm workers.
+* **Granular Failure Diagnostics & Manual Re-Ingestion**: Explicit stage recording (`FAILED_PARSING`, `FAILED_SUMMARIZATION`, `FAILED_CHUNKING`, `FAILED_EMBEDDING`, `FAILED_DATABASE`). When retries reach 3/3, status halts at `FAILED_RETRY_EXHAUSTED`. Operators trigger `manual_retry(job_id)` to reset retries and re-queue.
 
 ---
 
@@ -165,15 +277,19 @@ Kitchome_rag/
 │   ├── skills_ms/              # skills.ms Namespace & Routing Service
 │   │   ├── registry.py         # Skill registry & exemplar loader
 │   │   └── router.py           # Two-channel ensemble router (Lexical + Semantic)
-│   ├── ingestion/              # Ingestion Service (Producer)
-│   │   ├── loader.py           # Multi-format parser with security tagging
+│   ├── ingestion/              # Event-Driven Ingestion Service (Producer / Worker)
+│   │   ├── cursor.py           # Permanent Document Catalog & Idempotency Gatekeeper
+│   │   ├── queue.py            # DB-Backed Async Job Queue (SKIP LOCKED)
+│   │   ├── controller.py       # Ingestion Controller (intake, fast 202 Accepted)
+│   │   ├── worker.py           # 5-Stage Worker (Map-reduce, batch embed, atomic flip)
+│   │   ├── loader.py           # Multi-format parser with domain inference
 │   │   ├── chunker.py          # Text chunker (~700 tokens)
-│   │   ├── summarizer.py       # Progressive 700+150 token summarizer
+│   │   ├── summarizer.py       # Progressive & Map-Reduce summarizer
 │   │   ├── embedder.py         # Dense feature projection engine (384-dim)
-│   │   └── pipeline.py         # Decoupled ingestion worker
+│   │   └── pipeline.py         # Pipeline coordinator
 │   ├── vector_store/           # Storage Layer
 │   │   ├── base.py             # In-memory partitioned vector store with ABAC
-│   │   └── pgvector_store.py   # PostgreSQL pgvector implementation with JSONB ABAC
+│   │   └── pgvector_store.py   # PostgreSQL pgvector with JSONB ABAC & is_latest filters
 │   └── rag/                    # Guarded RAG Service & Query Tool
 │       ├── engine.py           # Guarded RAG query orchestrator
 │       ├── telemetry.py        # Strategy E evaluation telemetry logger
@@ -182,7 +298,8 @@ Kitchome_rag/
     ├── test_ingestion.py       # Ingestion & progressive summarization tests
     ├── test_ensemble_router.py # Lexical, semantic prototype & margin tests
     ├── test_auth_rbac_abac.py  # User tier & tenant isolation tests
-    └── test_rag_engine.py      # End-to-end RAG, Strategy E fallback & telemetry tests
+    ├── test_rag_engine_telemetry.py # End-to-end RAG & Strategy E tests
+    └── test_ingestion_controller_worker.py # Controller-worker & cursor tests
 ```
 
 ---

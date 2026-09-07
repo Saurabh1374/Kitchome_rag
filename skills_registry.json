@@ -18,29 +18,7 @@
       "calories",
       "protein",
       "chef",
-      "sauce",
-      "pasta",
-      "spicy",
-      "water",
-      "olive",
-      "parmesan",
-      "cheese",
-      "minutes",
-      "chicken",
-      "fryer",
-      "wings",
-      "degrees",
-      "salt",
-      "paprika",
-      "crispy",
-      "split",
-      "flats",
-      "drumettes",
-      "tbsp",
-      "garlic",
-      "powder",
-      "cooking",
-      "instructions"
+      "sauce"
     ],
     "file_patterns": [
       "*recipe*",
@@ -49,10 +27,27 @@
       "*meal*",
       "*cooking*"
     ],
+    "exemplars": [
+      "how to cook crispy chicken breast in an air fryer",
+      "substitute for heavy cream in pasta carbonara",
+      "oven baking temperature and cook time for sourdough",
+      "authentic italian lasagna meat sauce recipe",
+      "best marinade and seasoning for grilled salmon"
+    ],
+    "allowed_tiers": [
+      "free",
+      "premium",
+      "scholar",
+      "enterprise"
+    ],
     "summaries": {
       "Spicy Pasta Recipe": "Overall Summary of Spicy Pasta Recipe:\nDocument Title: Spicy Pasta Recipe\n\n- Boil water and add olive oil, pasta, and parmesan cheese for 10 minutes.",
       "Chicken Air Fryer Recipe": "Overall Summary of Chicken Air Fryer Recipe:\nDocument Title: Chicken Air Fryer Recipe\n\n- Air fryer chicken wings at 400 degrees with salt and paprika.",
-      "Air Fryer Chicken Recipe": "Overall Summary of Air Fryer Chicken Recipe:\nDocument Title: Air Fryer Chicken Recipe\n\n- Crispy Air Fryer Chicken Wings Recipe\n- Ingredients | 2 lbs chicken wings, split into flats and drumettes | 1 tbsp olive oil | 1 tsp garlic powder\n- Cooking Instructions | 1. Preheat the air fryer to 400\u00b0F (200\u00b0C) for 3 minutes. | 2. Pat the chicken wings dry with paper towels. | 3. Toss wings with olive oil, seasonings, and 1 tsp baking powder."
+      "Carbonara Ae9D09": "Overall Summary of Carbonara Ae9D09:\nDocument Title: Carbonara Ae9D09\n\n- Pasta Carbonara v1",
+      "Carbonara 8F9C0A": "Overall Summary of Carbonara 8F9C0A:\nDocument Title: Carbonara 8F9C0A\n\n- Pasta Carbonara v1",
+      "Carbonara": "Overall Summary of Carbonara:\nDocument Title: Carbonara\n\n- Pasta Carbonara v2 Authentic | Never use cream. Use guanciale and pecorino romano with egg yolks.",
+      "Sourdough Guide": "Overall Summary of Sourdough Guide:\nDocument Title: Sourdough Guide\n\n- Sourdough Starter | Feed equal parts flour and water every 24 hours at room temperature.",
+      "Salting Pasta": "Overall Summary of Salting Pasta:\nDocument Title: Salting Pasta\n\n- Quick tip: Salt boiling water generously before adding pasta.\n- Cook al dente."
     }
   },
   {
@@ -75,26 +70,7 @@
       "refrigerator",
       "warranty",
       "reset",
-      "filter",
-      "user",
-      "motor",
-      "overheats",
-      "thermal",
-      "fuse",
-      "fryer",
-      "indicates",
-      "heating",
-      "element",
-      "overheating",
-      "troubleshooting",
-      "guide",
-      "specifications",
-      "electrical",
-      "requirements",
-      "model",
-      "power",
-      "consumption",
-      "circuit"
+      "filter"
     ],
     "file_patterns": [
       "*manual*",
@@ -104,10 +80,28 @@
       "*troubleshoot*",
       "*user_guide*"
     ],
+    "exemplars": [
+      "error code E3 flashing on instant pot display",
+      "microwave heating element not working turns off",
+      "dishwasher leaking water from bottom door seal",
+      "refrigerator compressor running warm wattage rating",
+      "how to reset thermal fuse on blender motor"
+    ],
+    "allowed_tiers": [
+      "premium",
+      "scholar",
+      "enterprise"
+    ],
     "summaries": {
       "Blender User Manual": "Overall Summary of Blender User Manual:\nDocument Title: Blender User Manual\n\n- Voltage 120V. If motor overheats with Error E1, reset thermal fuse.",
       "Air Fryer Error Manual": "Overall Summary of Air Fryer Error Manual:\nDocument Title: Air Fryer Error Manual\n\n- Air fryer error E3 indicates heating element overheating.",
-      "Air Fryer User Manual": "Overall Summary of Air Fryer User Manual:\nDocument Title: Air Fryer User Manual\n\n- Air Fryer Pro 5000 User Manual & Troubleshooting Guide\n- Specifications & Electrical Requirements | Model: AF-PRO-5000 | Voltage: 120V AC, 60Hz | Power Consumption: 1500 Watts\n- Error Codes & Troubleshooting | Error E1**: Open circuit sensor error. Unplug unit for 10 minutes and retry. If issue persists, contact service. | Error E2**: Short circuit thermal cutoff error. Ensure heating element ventilation is not blocked. | Error E3**: Overheating protection activated. Disconnect power immediately and allow heating element to cool down completely.\n- Maintenance & Filter Replacement | Clean the removable heating element filter every 30 uses. Use non-abrasive soap and warm water only."
+      "Instant Vortex Air Fryer Manual": "Overall Summary of Instant Vortex Air Fryer Manual:\nDocument Title: Instant Vortex Air Fryer Manual\n\n- The Instant Vortex Air Fryer Pro uses 1500W power. To clear error E3, turn off unit and let heating",
+      "Air Fryer Guide A19295": "Overall Summary of Air Fryer Guide A19295:\nDocument Title: Air Fryer Guide A19295\n\n- Air Fryer Quickstart | Preheat basket at 380F for 3 minutes before placing food.",
+      "Air Fryer Guide 5D4799": "Overall Summary of Air Fryer Guide 5D4799:\nDocument Title: Air Fryer Guide 5D4799\n\n- Air Fryer Quickstart | Preheat basket at 380F for 3 minutes before placing food.",
+      "Air Fryer Guide": "Overall Summary of Air Fryer Guide:\nDocument Title: Air Fryer Guide\n\n- Air Fryer Quickstart | Preheat basket at 380F for 3 minutes before placing food.",
+      "Espresso Maintenance": "Overall Summary of Espresso Maintenance:\nDocument Title: Espresso Maintenance\n\n- Espresso Machine Maintenance | Descaling procedure requires 50% white vinegar and 50% distilled water.\n- Run two full brew cycles through the group head.\n- Flush with three full reservoirs of clean water before preparing coffee.\n- Wipe the steam wand after every milk frothing session.",
+      "Induction Guide": "Overall Summary of Induction Guide:\nDocument Title: Induction Guide\n\n- Paragraph One: Induction cooktops use electromagnetic fields to heat cookware directly.\n- Paragraph Two: Cast iron and magnetic stainless steel cookware are fully compatible.\n- Paragraph Three: Copper and aluminum pans require an interface adapter disc.\n- Paragraph Four: Keep digital displays clean and free of grease splatters.",
+      "Coffee Maker": "Overall Summary of Coffee Maker:\nDocument Title: Coffee Maker\n\n- Coffee Maker Manual\n- Fill reservoir with filtered water up to the 12 cup line."
     }
   },
   {
@@ -128,19 +122,7 @@
       "backsplash",
       "lighting",
       "island",
-      "shelving",
-      "kitchen",
-      "modern",
-      "guide",
-      "work",
-      "triangle",
-      "principle",
-      "efficient",
-      "aligns",
-      "three",
-      "primary",
-      "zones",
-      "sink"
+      "shelving"
     ],
     "file_patterns": [
       "*decor*",
@@ -149,9 +131,19 @@
       "*aesthetic*",
       "*interior*"
     ],
-    "summaries": {
-      "Modern Kitchen Layout Guide": "Overall Summary of Modern Kitchen Layout Guide:\nDocument Title: Modern Kitchen Layout Guide\n\n- Modern Kitchen Design & Countertop Layout Guide\n- Work Triangle Principle | An efficient kitchen layout aligns the three primary work zones: the sink, refrigerator, and cooking range. The perimeter distance of the triangle should ideally measure between 13 and 26 feet.\n- Material Aesthetics & Cabinetry | Calacatta Quartz Countertops**: Offers elegant white marble veining with non-porous durability. | Flat-Panel Minimalist Cabinets**: Matte black or natural oak wood veneer finishes pair excellently with brass fixtures and under-cabinet LED strip lighting. | Kitchen Islands**: Recommend a minimum clearance of 36 to 42 inches around island perimeters for optimal foot traffic flow."
-    }
+    "exemplars": [
+      "modern Scandinavian kitchen cabinet color palette",
+      "countertop overhang dimensions for kitchen island seating",
+      "under-cabinet LED lighting placement layout ideas",
+      "quartz vs granite countertop aesthetic comparison",
+      "small kitchen pantry organization shelving layout"
+    ],
+    "allowed_tiers": [
+      "premium",
+      "scholar",
+      "enterprise"
+    ],
+    "summaries": {}
   },
   {
     "skill_id": "cleaning_maintenance",
@@ -177,16 +169,7 @@
       "countertop",
       "granite",
       "marble",
-      "care",
-      "natural",
-      "stone",
-      "water",
-      "guide",
-      "removal",
-      "daily",
-      "sanitization",
-      "wipe",
-      "surfaces"
+      "care"
     ],
     "file_patterns": [
       "*clean*",
@@ -195,8 +178,59 @@
       "*care*",
       "*sanitize*"
     ],
+    "exemplars": [
+      "remove stubborn red wine stain from granite countertop",
+      "deep clean oven interior with baking soda and vinegar",
+      "unclog kitchen sink drain garbage disposal maintenance",
+      "how to seal natural stone marble countertops",
+      "descaling electric kettle and coffee maker with citric acid"
+    ],
+    "allowed_tiers": [
+      "premium",
+      "scholar",
+      "enterprise"
+    ],
     "summaries": {
-      "Countertop Cleaning Guide": "Overall Summary of Countertop Cleaning Guide:\nDocument Title: Countertop Cleaning Guide\n\n- Natural Stone Countertop Maintenance & Stain Removal\n- Daily Sanitization & Cleaning | 1. Wipe granite and marble surfaces using warm water, mild dish soap, and a microfiber cloth. | 2. Avoid acidic cleaners such as vinegar, lemon juice, or bleach on natural stone, as acid dulls and\n- Sealing & Waterproofing | Reseal natural granite and marble countertops every 12 to 18 months using a penetrating water-based"
+      "Cleaning Guide 84C0B4": "Overall Summary of Cleaning Guide 84C0B4:\nDocument Title: Cleaning Guide 84C0B4\n\n- Deep Cleaning Guide | Use warm water and non-abrasive sponge on enameled surfaces.\n- Never submerge heating coils.",
+      "Cleaning Guide E71C8D": "Overall Summary of Cleaning Guide E71C8D:\nDocument Title: Cleaning Guide E71C8D\n\n- Deep Cleaning Guide | Use warm water and non-abrasive sponge on enameled surfaces.\n- Never submerge heating coils.",
+      "Cleaning Guide": "Overall Summary of Cleaning Guide:\nDocument Title: Cleaning Guide\n\n- Deep Cleaning Guide | Use warm water and non-abrasive sponge on enameled surfaces.\n- Never submerge heating coils."
     }
+  },
+  {
+    "skill_id": "academia_research",
+    "name": "Academic Research & Science",
+    "namespace": "academia_research",
+    "description": "Peer-reviewed research papers, methodologies, empirical evaluations, neural architectures.",
+    "keywords": [
+      "research",
+      "paper",
+      "methodology",
+      "empirical",
+      "evaluation",
+      "architecture",
+      "dataset",
+      "citations",
+      "latex",
+      "theorem",
+      "transformer"
+    ],
+    "file_patterns": [
+      "*paper*",
+      "*research*",
+      "*study*",
+      "*thesis*"
+    ],
+    "exemplars": [
+      "neural network transformer architecture attention mechanism",
+      "empirical comparative analysis of retrieval augmented generation",
+      "peer-reviewed evaluation metrics for domain classification",
+      "statistical significance testing in large language model benchmarks",
+      "loss convergence mathematical formulation in deep learning"
+    ],
+    "allowed_tiers": [
+      "scholar",
+      "enterprise"
+    ],
+    "summaries": {}
   }
 ]

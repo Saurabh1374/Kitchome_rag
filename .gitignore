@@ -64,8 +64,7 @@ coverage.xml
 
 # Local Vector Data & Scratch files
 vector_store_data.json
-data/processed/*
-!data/processed/.gitkeep
+data/
 
 # Internal Project Documentation
 project_details.md

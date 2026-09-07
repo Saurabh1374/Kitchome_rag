@@ -10,6 +10,9 @@ class RawDocument(BaseModel):
     source_path: str
     content: str
     declared_domain: Optional[str] = None
+    access_tier: str = "free"
+    tenant_id: str = "global"
+    clearance_level: int = 1
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 class DocumentLoader:
@@ -44,6 +47,11 @@ class DocumentLoader:
 
         doc_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, file_path))
 
+        if not declared_domain:
+            parent_dir = os.path.basename(os.path.dirname(file_path))
+            if parent_dir and parent_dir not in ("data", ".", ""):
+                declared_domain = parent_dir
+
         return RawDocument(
             document_id=doc_id,
             title=title,
@@ -59,9 +67,14 @@ class DocumentLoader:
         if not os.path.exists(dir_path):
             return documents
 
+        valid_extensions = {".json", ".txt", ".md", ".markdown"}
+
         for root, _, files in os.walk(dir_path):
-            for file in files:
+            for file in sorted(files):
                 if file.startswith("."):
+                    continue
+                ext = os.path.splitext(file)[1].lower()
+                if ext not in valid_extensions:
                     continue
                 file_path = os.path.join(root, file)
                 try:
