@@ -2,9 +2,12 @@ import os
 import sqlite3
 import time
 import threading
+import logging
 from contextlib import contextmanager
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger("kitchome.ingestion.cursor")
 
 class IngestionCursorRecord(BaseModel):
     document_id: str
@@ -33,6 +36,7 @@ class IngestionCursorManager:
         self._local = threading.local()
         os.makedirs(os.path.dirname(os.path.abspath(db_path)), exist_ok=True)
         self._init_db()
+        logger.debug("IngestionCursorManager initialized at db_path='%s'", os.path.abspath(db_path))
 
     @contextmanager
     def _get_connection(self):
@@ -50,8 +54,9 @@ class IngestionCursorManager:
         if hasattr(self._local, "conn") and self._local.conn is not None:
             try:
                 self._local.conn.close()
-            except Exception:
-                pass
+                logger.debug("Closed thread-local SQLite connection for cursor manager.")
+            except Exception as e:
+                logger.debug("Error closing thread-local SQLite connection: %s", e)
             self._local.conn = None
 
     def _init_db(self):
@@ -106,7 +111,13 @@ class IngestionCursorManager:
                 (content_hash,)
             )
             row = cur.fetchone()
-            return self._row_to_record(row) if row else None
+            record = self._row_to_record(row) if row else None
+            logger.debug(
+                "Cursor lookup by hash '%.12s...': %s",
+                content_hash,
+                f"HIT (doc_id='{record.document_id}', family='{record.doc_family}', v{record.version})" if record else "MISS"
+            )
+            return record
 
     def get_by_path(self, file_path: str) -> Optional[IngestionCursorRecord]:
         with self._get_connection() as conn:
@@ -115,7 +126,13 @@ class IngestionCursorManager:
                 (file_path,)
             )
             row = cur.fetchone()
-            return self._row_to_record(row) if row else None
+            record = self._row_to_record(row) if row else None
+            logger.debug(
+                "Cursor lookup by path '%s': %s",
+                file_path,
+                f"HIT (doc_id='{record.document_id}', v{record.version})" if record else "MISS"
+            )
+            return record
 
     def get_active_by_family(self, doc_family: str) -> Optional[IngestionCursorRecord]:
         with self._get_connection() as conn:
@@ -124,7 +141,13 @@ class IngestionCursorManager:
                 (doc_family,)
             )
             row = cur.fetchone()
-            return self._row_to_record(row) if row else None
+            record = self._row_to_record(row) if row else None
+            logger.debug(
+                "Cursor lookup for active family '%s': %s",
+                doc_family,
+                f"HIT (v{record.version}, status={record.status})" if record else "MISS"
+            )
+            return record
 
     def get_next_version(self, doc_family: str) -> int:
         with self._get_connection() as conn:
@@ -133,9 +156,9 @@ class IngestionCursorManager:
                 (doc_family,)
             )
             row = cur.fetchone()
-            if row and row["max_v"] is not None:
-                return int(row["max_v"]) + 1
-            return 1
+            next_v = int(row["max_v"]) + 1 if (row and row["max_v"] is not None) else 1
+            logger.debug("Computed next version for family '%s': v%d (current_max=%s)", doc_family, next_v, row["max_v"] if row else None)
+            return next_v
 
     def get_by_document_id(self, document_id: str) -> Optional[IngestionCursorRecord]:
         with self._get_connection() as conn:
@@ -144,11 +167,21 @@ class IngestionCursorManager:
                 (document_id,)
             )
             row = cur.fetchone()
-            return self._row_to_record(row) if row else None
+            record = self._row_to_record(row) if row else None
+            logger.debug(
+                "Cursor lookup by document_id='%s': %s",
+                document_id,
+                f"HIT (family='{record.doc_family}', v{record.version}, status={record.status})" if record else "MISS"
+            )
+            return record
 
     def record_parsed(self, record: IngestionCursorRecord) -> IngestionCursorRecord:
         """Records an intermediate parsed document record with status = 'PARSED'."""
         now = time.time()
+        logger.info(
+            "Cursor recording PARSED stage: doc_id='%s', family='%s', v%d, domain='%s', tenant='%s'",
+            record.document_id, record.doc_family, record.version, record.declared_domain, record.tenant_id
+        )
         with self._get_connection() as conn:
             conn.execute(
                 """
@@ -168,10 +201,18 @@ class IngestionCursorManager:
                 )
             )
             conn.commit()
+        logger.debug(
+            "Cursor record parsed saved: hash='%.12s...', file='%s', chunks=%d",
+            record.content_hash, record.file_path, record.chunks_count
+        )
         return record
 
     def commit_version(self, record: IngestionCursorRecord) -> None:
         now = time.time()
+        logger.info(
+            "Cursor COMMITTING active version: family='%s', v%d, doc_id='%s', chunks=%d, status='%s'",
+            record.doc_family, record.version, record.document_id, record.chunks_count, record.status
+        )
         with self._get_connection() as conn:
             # 1. Archive any prior active versions of this doc_family
             conn.execute(
@@ -201,9 +242,14 @@ class IngestionCursorManager:
                 )
             )
             conn.commit()
+        logger.debug(
+            "Cursor committed successfully: archived previous active versions for family '%s' and marked doc_id='%s' active (is_latest=1)",
+            record.doc_family, record.document_id
+        )
 
     def quash_version(self, document_id: str) -> bool:
         now = time.time()
+        logger.info("Cursor QUASHING document_id='%s'", document_id)
         with self._get_connection() as conn:
             cur = conn.execute(
                 """
@@ -214,7 +260,12 @@ class IngestionCursorManager:
                 (now, document_id)
             )
             conn.commit()
-            return cur.rowcount > 0
+            success = cur.rowcount > 0
+            if success:
+                logger.info("Cursor successfully QUASHED document_id='%s' (rows_updated=%d)", document_id, cur.rowcount)
+            else:
+                logger.warning("Cursor quash failed: document_id='%s' not found", document_id)
+            return success
 
     def list_records(self, doc_family: Optional[str] = None) -> List[IngestionCursorRecord]:
         with self._get_connection() as conn:
@@ -222,4 +273,6 @@ class IngestionCursorManager:
                 cur = conn.execute("SELECT * FROM ingestion_cursor WHERE doc_family = ? ORDER BY version ASC;", (doc_family,))
             else:
                 cur = conn.execute("SELECT * FROM ingestion_cursor ORDER BY created_at DESC;")
-            return [self._row_to_record(r) for r in cur.fetchall()]
+            records = [self._row_to_record(r) for r in cur.fetchall()]
+            logger.debug("Listed cursor records: doc_family_filter='%s', count=%d", doc_family or 'ALL', len(records))
+            return records

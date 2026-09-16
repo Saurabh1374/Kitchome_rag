@@ -2,6 +2,12 @@ import os
 from typing import Optional
 from pydantic import BaseModel, Field
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 def mask_secret(val: Optional[str], visible_chars: int = 4, full_mask: bool = False) -> str:
     """Masks secret strings for safe logging and string representation."""
     if not val:
@@ -110,6 +116,39 @@ class WorkerPoolConfig(BaseModel):
     def get_masked_dict(self) -> dict:
         return self.model_dump()
 
+class ObservabilityConfig(BaseModel):
+    host: str = Field(default_factory=lambda: os.getenv("OBSERVABILITY_HOST", "192.168.0.117"))
+    loki_url: str = Field(default_factory=lambda: os.getenv("LOKI_URL", "http://192.168.0.117:3100/loki/api/v1/push"))
+    loki_enabled: bool = Field(default_factory=lambda: os.getenv("LOKI_ENABLED", "true").lower() in ("true", "1", "yes"))
+    tempo_endpoint: str = Field(default_factory=lambda: os.getenv("TEMPO_OTLP_ENDPOINT", "http://192.168.0.117:4318/v1/traces"))
+    tracing_enabled: bool = Field(default_factory=lambda: os.getenv("TRACING_ENABLED", "true").lower() in ("true", "1", "yes"))
+    metrics_enabled: bool = Field(default_factory=lambda: os.getenv("METRICS_ENABLED", "true").lower() in ("true", "1", "yes"))
+
+    def get_masked_dict(self) -> dict:
+        return self.model_dump()
+
+class AuthConfig(BaseModel):
+    service_url: str = Field(default_factory=lambda: os.getenv("AUTH_SERVICE_URL", "http://localhost:8080"))
+    jwks_url: str = Field(default_factory=lambda: os.getenv("JWKS_URL", "http://localhost:8080/.well-known/jwks.json"))
+    login_url: str = Field(default_factory=lambda: os.getenv("AUTH_LOGIN_URL", "http://localhost:8080/login"))
+
+    def get_masked_dict(self) -> dict:
+        return self.model_dump()
+
+class RedisConfig(BaseModel):
+    host: str = Field(default_factory=lambda: os.getenv("REDIS_HOST", "192.168.0.117"))
+    port: int = Field(default_factory=lambda: int(os.getenv("REDIS_PORT", "6379")))
+    db: int = Field(default_factory=lambda: int(os.getenv("REDIS_DB", "0")))
+    password: Optional[str] = Field(default_factory=lambda: os.getenv("REDIS_PASSWORD") or None)
+    enabled: bool = Field(default_factory=lambda: os.getenv("REDIS_ENABLED", "true").lower() in ("true", "1", "yes"))
+    socket_timeout_seconds: float = Field(default=0.2)
+
+    def get_masked_dict(self) -> dict:
+        d = self.model_dump()
+        if d.get("password"):
+            d["password"] = mask_secret(d["password"])
+        return d
+
 class AppConfig(BaseModel):
     data_dir: str = os.path.join(os.path.dirname(__file__), "data")
     vector_db_path: str = os.path.join(os.path.dirname(__file__), "vector_store_data.json")
@@ -118,12 +157,18 @@ class AppConfig(BaseModel):
     skills_ms: SkillsMSConfig = SkillsMSConfig()
     pgvector: PGVectorConfig = PGVectorConfig()
     worker: WorkerPoolConfig = WorkerPoolConfig()
+    observability: ObservabilityConfig = ObservabilityConfig()
+    auth: AuthConfig = AuthConfig()
+    redis: RedisConfig = RedisConfig()
 
     def get_masked_dict(self) -> dict:
         """Returns configuration dictionary with all secrets and credentials masked."""
         data = self.model_dump()
         data["embedder"] = self.embedder.get_masked_dict()
         data["pgvector"] = self.pgvector.get_masked_dict()
+        data["observability"] = self.observability.get_masked_dict()
+        data["auth"] = self.auth.get_masked_dict()
+        data["redis"] = self.redis.get_masked_dict()
         return data
 
     def __repr__(self) -> str:
@@ -132,4 +177,5 @@ class AppConfig(BaseModel):
     __str__ = __repr__
 
 config = AppConfig()
+
 

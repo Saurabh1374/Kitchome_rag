@@ -1,3 +1,4 @@
+import os
 import re
 from typing import List, Tuple
 
@@ -34,6 +35,50 @@ class DocumentSummarizer:
     @staticmethod
     def count_words(text: str) -> int:
         return len(text.split())
+
+    def process_and_summarize_file(self, document_title: str, file_path: str) -> Tuple[str, List[str]]:
+        """
+        Executes progressive streaming summarization directly from a file path.
+        Reads line-by-line / paragraph-by-paragraph to avoid loading entire document into memory.
+        """
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Document file not found: {file_path}")
+
+        running_summary_buffer = f"Document Title: {document_title}\n"
+        current_para: List[str] = []
+        has_content = False
+
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            for line in f:
+                stripped = line.strip()
+                if not stripped:
+                    if current_para:
+                        para_text = "\n".join(current_para).strip()
+                        current_para = []
+                        if para_text:
+                            has_content = True
+                            chunk_summary = self._summarize_single_chunk(para_text)
+                            running_summary_buffer += f"\n- {chunk_summary}"
+                            if self.estimate_tokens(running_summary_buffer) >= self.purge_trigger_tokens:
+                                running_summary_buffer = self._purge_and_compact_buffer(running_summary_buffer)
+                else:
+                    current_para.append(stripped)
+
+            if current_para:
+                para_text = "\n".join(current_para).strip()
+                if para_text:
+                    has_content = True
+                    chunk_summary = self._summarize_single_chunk(para_text)
+                    running_summary_buffer += f"\n- {chunk_summary}"
+                    if self.estimate_tokens(running_summary_buffer) >= self.purge_trigger_tokens:
+                        running_summary_buffer = self._purge_and_compact_buffer(running_summary_buffer)
+
+        if not has_content:
+            return f"Summary of {document_title}: Empty document", []
+
+        final_summary = self._create_final_skills_summary(document_title, running_summary_buffer)
+        extracted_keywords = self._extract_keywords(final_summary)
+        return final_summary, extracted_keywords
 
     def process_and_summarize_document(self, document_title: str, text: str) -> Tuple[str, List[str]]:
         """

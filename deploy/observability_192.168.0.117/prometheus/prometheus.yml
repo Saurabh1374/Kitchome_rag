@@ -1,0 +1,44 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  # ----------------------------------------------------------------------------
+  # 1. Kitchome RAG Application (Local Mac API on LAN)
+  # ----------------------------------------------------------------------------
+  - job_name: "kitchome-rag"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["192.168.0.103:8000"]
+        labels:
+          application: "kitchome-rag"
+          environment: "development"
+          host: "macbook-local"
+
+  # ----------------------------------------------------------------------------
+  # 2. Observability Stack Self-Monitoring (Local to 192.168.0.117)
+  # ----------------------------------------------------------------------------
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "loki"
+    static_configs:
+      - targets: ["loki:3100"]
+
+  - job_name: "tempo"
+    static_configs:
+      - targets: ["tempo:3200"]
+
+  # ----------------------------------------------------------------------------
+  # 3. Complete Custom Auth Service (Port 8080)
+  # ----------------------------------------------------------------------------
+  - job_name: "auth-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["192.168.0.103:8080"]
+        labels:
+          application: "complete-custom-auth"
+          service: "auth"
+          host: "macbook-local"
+

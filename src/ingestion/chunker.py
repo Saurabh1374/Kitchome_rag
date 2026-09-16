@@ -235,6 +235,9 @@ class TextChunker:
                 }
             )
 
+    def chunk_document_lazy(self, document: RawDocument, namespace: str) -> Iterator[TextChunk]:
+        return self._generate_chunks_lazy(document, namespace)
+
     def chunk_document(self, document: RawDocument, namespace: str) -> List[TextChunk]:
         return list(self._generate_chunks_lazy(document, namespace))
 

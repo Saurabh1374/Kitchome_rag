@@ -2,21 +2,23 @@ import time
 from typing import List, Dict, Any, Optional
 from ..skills_ms.router import SkillsRouter
 from ..vector_store.base import NamespaceVectorStore
+from ..vector_store.factory import get_vector_store
 from ..ingestion.embedder import EmbeddingEngine
 from ..auth.context import UserContext, UserTier
 from ..auth.rbac import RBACPolicyEngine
 from ..auth.abac import ABACPolicyEngine
+from ..auth.service import ServiceScope, ServiceAuthGuard
 from .telemetry import TelemetryTracker, RetrievalTelemetry
 from .generator import GroundedGenerator
 
 class RAGQueryEngine:
     """
     Guarded RAG Query Engine & Headless Tool:
-    1. Validates UserContext (RBAC + ABAC Policy Decision Point)
+    1. Validates Service Token & UserContext (Coarse Scope + RBAC + ABAC Policy Decision Point)
     2. Resolves target namespaces via skills.ms Ensemble Router (Lexical + Semantic Prototype)
     3. Executes database-level ABAC vector retrieval (pgvector / in-memory)
     4. Evaluates Strategy E Fallback: Expands scope if top similarity is below threshold
-    5. Assembles Parent-Context prompt & returns grounded synthesis with source citations
+    5. Assembles Parent-Context prompt from dedicated summaries table & returns grounded synthesis with source citations
     """
     def __init__(
         self,
@@ -28,7 +30,7 @@ class RAGQueryEngine:
         relevance_threshold: float = 0.40
     ):
         self.router = router or SkillsRouter()
-        self.vector_store = vector_store or NamespaceVectorStore()
+        self.vector_store = vector_store or get_vector_store()
         self.embedder = embedder or EmbeddingEngine()
         self.generator = generator or GroundedGenerator()
         self.telemetry = telemetry or TelemetryTracker()
@@ -38,14 +40,19 @@ class RAGQueryEngine:
         self, 
         query_text: str, 
         user_context: Optional[UserContext] = None, 
+        token: Optional[str] = None,
         top_k: int = 3,
         is_summary: Optional[bool] = None
     ) -> Dict[str, Any]:
         """
-        Executes a guarded RAG query flow.
+        Executes a guarded RAG query flow with coarse service auth and dual-layer authorization.
         """
-        # 1. Identity & Auth Context Defaulting
-        user = user_context or UserContext(user_id="anonymous", tier=UserTier.FREE)
+        # 1. Coarse Service Auth Enforcement (verifies cryptographic JWT token if provided)
+        user = ServiceAuthGuard.enforce_service_auth(
+            auth_header_or_token=token,
+            required_scope=ServiceScope.RAG_READ if token else None,
+            fallback_user=user_context or UserContext(user_id="anonymous", tier=UserTier.FREE)
+        )
         all_namespaces = self.router.registry.get_all_namespaces()
 
         # 2. Ensemble Namespace Resolution (skills.ms)
@@ -130,8 +137,19 @@ class RAGQueryEngine:
         )
         self.telemetry.record_event(telemetry_event)
 
-        # 8. Grounded Generation with Parent-Context Prompt Injection
-        generation_result = self.generator.synthesize(query=query_text, retrieved_chunks=chunks)
+        # 8. Batch Resolve Parent Document Summaries from dedicated storage
+        doc_ids = list({c.get("document_id") for c in chunks if c.get("document_id")})
+        doc_summaries_map: Dict[str, str] = {}
+        if doc_ids and hasattr(self.vector_store, "get_summaries"):
+            summaries_records = self.vector_store.get_summaries(doc_ids, abac_filter=abac_filter)
+            doc_summaries_map = {did: s.summary_text for did, s in summaries_records.items()}
+
+        # 9. Grounded Generation with Parent-Context Prompt Injection
+        generation_result = self.generator.synthesize(
+            query=query_text,
+            retrieved_chunks=chunks,
+            document_summaries=doc_summaries_map
+        )
 
         return {
             "status": "SUCCESS",

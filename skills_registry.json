@@ -47,7 +47,11 @@
       "Carbonara 8F9C0A": "Overall Summary of Carbonara 8F9C0A:\nDocument Title: Carbonara 8F9C0A\n\n- Pasta Carbonara v1",
       "Carbonara": "Overall Summary of Carbonara:\nDocument Title: Carbonara\n\n- Pasta Carbonara v2 Authentic | Never use cream. Use guanciale and pecorino romano with egg yolks.",
       "Sourdough Guide": "Overall Summary of Sourdough Guide:\nDocument Title: Sourdough Guide\n\n- Sourdough Starter | Feed equal parts flour and water every 24 hours at room temperature.",
-      "Salting Pasta": "Overall Summary of Salting Pasta:\nDocument Title: Salting Pasta\n\n- Quick tip: Salt boiling water generously before adding pasta.\n- Cook al dente."
+      "Salting Pasta": "Overall Summary of Salting Pasta:\nDocument Title: Salting Pasta\n\n- Quick tip: Salt boiling water generously before adding pasta.\n- Cook al dente.",
+      "Document by User A": "Overall Summary of Document by User A:\nDocument Title: Document by User A\n\n- Culinary guidance for slow cooking pot roast with root vegetables and red wine reduction.",
+      "Failed Recipe Ingestion": "Overall Summary of Failed Recipe Ingestion:\nDocument Title: Failed Recipe Ingestion\n\n- French pastry dough technique: laminate with 82% European cultured butter for 5 turns.",
+      "Crispy Skin Salmon Recipe": "Overall Summary of Crispy Skin Salmon Recipe:\nDocument Title: Crispy Skin Salmon Recipe\n\n- Score salmon skin lightly with a sharp knife. Pat completely dry with paper towels. Season with kosh",
+      "Herb Butter Roast Chicken": "Overall Summary of Herb Butter Roast Chicken:\nDocument Title: Herb Butter Roast Chicken\n\n- Stuff chicken cavity with fresh rosemary, thyme, garlic cloves, and halved lemon. Rub soft herb butt"
     }
   },
   {
@@ -101,7 +105,67 @@
       "Air Fryer Guide": "Overall Summary of Air Fryer Guide:\nDocument Title: Air Fryer Guide\n\n- Air Fryer Quickstart | Preheat basket at 380F for 3 minutes before placing food.",
       "Espresso Maintenance": "Overall Summary of Espresso Maintenance:\nDocument Title: Espresso Maintenance\n\n- Espresso Machine Maintenance | Descaling procedure requires 50% white vinegar and 50% distilled water.\n- Run two full brew cycles through the group head.\n- Flush with three full reservoirs of clean water before preparing coffee.\n- Wipe the steam wand after every milk frothing session.",
       "Induction Guide": "Overall Summary of Induction Guide:\nDocument Title: Induction Guide\n\n- Paragraph One: Induction cooktops use electromagnetic fields to heat cookware directly.\n- Paragraph Two: Cast iron and magnetic stainless steel cookware are fully compatible.\n- Paragraph Three: Copper and aluminum pans require an interface adapter disc.\n- Paragraph Four: Keep digital displays clean and free of grease splatters.",
-      "Coffee Maker": "Overall Summary of Coffee Maker:\nDocument Title: Coffee Maker\n\n- Coffee Maker Manual\n- Fill reservoir with filtered water up to the 12 cup line."
+      "Coffee Maker": "Overall Summary of Coffee Maker:\nDocument Title: Coffee Maker\n\n- Coffee Maker Manual\n- Fill reservoir with filtered water up to the 12 cup line.",
+      "Induction Stove Care": "Overall Summary of Induction Stove Care:\nDocument Title: Induction Stove Care\n\n- Always clean induction glass cooktops with a microfibre cloth and specialized cleaner.",
+      "Document by User B": "Overall Summary of Document by User B:\nDocument Title: Document by User B\n\n- Induction range error codes and inverter board troubleshooting manual.",
+      "Commercial Blender User Guide": "Overall Summary of Commercial Blender User Guide:\nDocument Title: Commercial Blender User Guide\n\n- Commercial Blender Operating Instructions.\n- Ensure jar is firmly locked into the motor base before powering on. Never blend boiling liquids with",
+      "Coffee Guide V1": "Overall Summary of Coffee Guide V1:\nDocument Title: Coffee Guide V1\n\n- Espresso extraction requires a 1:2 ratio of dry ground coffee to liquid espresso in 25 to 30 seconds. The brew water temperature should be maintained between 90 and 96 degrees Celsius.",
+      "Oven Cal V1": "Overall Summary of Oven Cal V1:\nDocument Title: Oven Cal V1\n\n- Original factory calibration standard for convection ovens. Temperature accuracy variance is plus or",
+      "Oven Cal V2": "Overall Summary of Oven Cal V2:\nDocument Title: Oven Cal V2\n\n- Updated 2026 calibration standard for commercial convection ovens. Temperature accuracy variance mus",
+      "Air Fryer Cleaning Async": "Overall Summary of Air Fryer Cleaning Async:\nDocument Title: Air Fryer Cleaning Async\n\n- Unplug appliance before disassembly. Soak basket in warm soapy water for 20 minutes. Use non-abrasiv",
+      "Air Fryer Cleaning 8A0Ff6": "Overall Summary of Air Fryer Cleaning 8A0Ff6:\nDocument Title: Air Fryer Cleaning 8A0Ff6\n\n- Unplug appliance before disassembly (8a0ff6). Soak basket in warm soapy water for 20 minutes. Use no",
+      "Coffee Guide V1 D63357": "Overall Summary of Coffee Guide V1 D63357:\nDocument Title: Coffee Guide V1 D63357\n\n- Espresso extraction (d63357) requires a 1:2 ratio of dry ground coffee to liquid espresso in 25 to 30 seconds. The brew water temperature should be maintained between 90 and 96 degrees Celsius.",
+      "Oven Cal V1 715A30": "Overall Summary of Oven Cal V1 715A30:\nDocument Title: Oven Cal V1 715A30\n\n- Original factory calibration standard (715a30) for convection ovens. Temperature accuracy variance i",
+      "Oven Cal V2 715A30": "Overall Summary of Oven Cal V2 715A30:\nDocument Title: Oven Cal V2 715A30\n\n- Updated 2026 calibration standard (715a30) for commercial convection ovens. Temperature accuracy var",
+      "Air Fryer Cleaning F0D87D": "Overall Summary of Air Fryer Cleaning F0D87D:\nDocument Title: Air Fryer Cleaning F0D87D\n\n- Unplug appliance before disassembly (f0d87d). Soak basket in warm soapy water for 20 minutes. Use no",
+      "Coffee Guide V1 D682Ad": "Overall Summary of Coffee Guide V1 D682Ad:\nDocument Title: Coffee Guide V1 D682Ad\n\n- Espresso extraction (d682ad) requires a 1:2 ratio of dry ground coffee to liquid espresso in 25 to 30 seconds. The brew water temperature should be maintained between 90 and 96 degrees Celsius.",
+      "Oven Cal V1 0B807E": "Overall Summary of Oven Cal V1 0B807E:\nDocument Title: Oven Cal V1 0B807E\n\n- Original factory calibration standard (0b807e) for convection ovens. Temperature accuracy variance i",
+      "Oven Cal V2 0B807E": "Overall Summary of Oven Cal V2 0B807E:\nDocument Title: Oven Cal V2 0B807E\n\n- Updated 2026 calibration standard (0b807e) for commercial convection ovens. Temperature accuracy var",
+      "Air Fryer Cleaning Ed9303": "Overall Summary of Air Fryer Cleaning Ed9303:\nDocument Title: Air Fryer Cleaning Ed9303\n\n- Unplug appliance before disassembly (ed9303). Soak basket in warm soapy water for 20 minutes. Use no",
+      "Coffee Guide V1 4Fc0E2": "Overall Summary of Coffee Guide V1 4Fc0E2:\nDocument Title: Coffee Guide V1 4Fc0E2\n\n- Espresso extraction (4fc0e2) requires a 1:2 ratio of dry ground coffee to liquid espresso in 25 to 30 seconds. The brew water temperature should be maintained between 90 and 96 degrees Celsius.",
+      "Oven Cal V1 5D8A5C": "Overall Summary of Oven Cal V1 5D8A5C:\nDocument Title: Oven Cal V1 5D8A5C\n\n- Original factory calibration standard (5d8a5c) for convection ovens. Temperature accuracy variance i",
+      "Oven Cal V2 5D8A5C": "Overall Summary of Oven Cal V2 5D8A5C:\nDocument Title: Oven Cal V2 5D8A5C\n\n- Updated 2026 calibration standard (5d8a5c) for commercial convection ovens. Temperature accuracy var",
+      "Air Fryer Cleaning 04B1Fe": "Overall Summary of Air Fryer Cleaning 04B1Fe:\nDocument Title: Air Fryer Cleaning 04B1Fe\n\n- Unplug appliance before disassembly (04b1fe). Soak basket in warm soapy water for 20 minutes. Use no",
+      "Coffee Guide V1 9Fe6C2": "Overall Summary of Coffee Guide V1 9Fe6C2:\nDocument Title: Coffee Guide V1 9Fe6C2\n\n- Espresso extraction (9fe6c2) requires a 1:2 ratio of dry ground coffee to liquid espresso in 25 to 30 seconds. The brew water temperature should be maintained between 90 and 96 degrees Celsius.",
+      "Oven Cal V1 D56724": "Overall Summary of Oven Cal V1 D56724:\nDocument Title: Oven Cal V1 D56724\n\n- Original factory calibration standard (d56724) for convection ovens. Temperature accuracy variance i",
+      "Oven Cal V2 D56724": "Overall Summary of Oven Cal V2 D56724:\nDocument Title: Oven Cal V2 D56724\n\n- Updated 2026 calibration standard (d56724) for commercial convection ovens. Temperature accuracy var",
+      "Air Fryer Cleaning 2B5B3F": "Overall Summary of Air Fryer Cleaning 2B5B3F:\nDocument Title: Air Fryer Cleaning 2B5B3F\n\n- Unplug appliance before disassembly (2b5b3f). Soak basket in warm soapy water for 20 minutes. Use no",
+      "Coffee Guide V1 C63647": "Overall Summary of Coffee Guide V1 C63647:\nDocument Title: Coffee Guide V1 C63647\n\n- Espresso extraction (c63647) requires a 1:2 ratio of dry ground coffee to liquid espresso in 25 to 30 seconds. The brew water temperature should be maintained between 90 and 96 degrees Celsius.",
+      "Oven Cal V1 4C5389": "Overall Summary of Oven Cal V1 4C5389:\nDocument Title: Oven Cal V1 4C5389\n\n- Original factory calibration standard (4c5389) for convection ovens. Temperature accuracy variance i",
+      "Oven Cal V2 4C5389": "Overall Summary of Oven Cal V2 4C5389:\nDocument Title: Oven Cal V2 4C5389\n\n- Updated 2026 calibration standard (4c5389) for commercial convection ovens. Temperature accuracy var",
+      "Air Fryer Cleaning 74Aa38": "Overall Summary of Air Fryer Cleaning 74Aa38:\nDocument Title: Air Fryer Cleaning 74Aa38\n\n- Unplug appliance before disassembly (74aa38). Soak basket in warm soapy water for 20 minutes. Use no",
+      "Coffee Guide V1 24Aa38": "Overall Summary of Coffee Guide V1 24Aa38:\nDocument Title: Coffee Guide V1 24Aa38\n\n- Espresso extraction (24aa38) requires a 1:2 ratio of dry ground coffee to liquid espresso in 25 to 30 seconds. The brew water temperature should be maintained between 90 and 96 degrees Celsius.",
+      "Oven Cal V1 6Ea4Df": "Overall Summary of Oven Cal V1 6Ea4Df:\nDocument Title: Oven Cal V1 6Ea4Df\n\n- Original factory calibration standard (6ea4df) for convection ovens. Temperature accuracy variance i",
+      "Oven Cal V2 6Ea4Df": "Overall Summary of Oven Cal V2 6Ea4Df:\nDocument Title: Oven Cal V2 6Ea4Df\n\n- Updated 2026 calibration standard (6ea4df) for commercial convection ovens. Temperature accuracy var",
+      "Air Fryer Cleaning 4E6B16": "Overall Summary of Air Fryer Cleaning 4E6B16:\nDocument Title: Air Fryer Cleaning 4E6B16\n\n- Unplug appliance before disassembly (4e6b16). Soak basket in warm soapy water for 20 minutes. Use no",
+      "Coffee Guide V1 4A57D4": "Overall Summary of Coffee Guide V1 4A57D4:\nDocument Title: Coffee Guide V1 4A57D4\n\n- Espresso extraction (4a57d4) requires a 1:2 ratio of dry ground coffee to liquid espresso in 25 to 30 seconds. The brew water temperature should be maintained between 90 and 96 degrees Celsius.",
+      "Oven Cal V1 A8F93A": "Overall Summary of Oven Cal V1 A8F93A:\nDocument Title: Oven Cal V1 A8F93A\n\n- Original factory calibration standard (a8f93a) for convection ovens. Temperature accuracy variance i",
+      "Oven Cal V2 A8F93A": "Overall Summary of Oven Cal V2 A8F93A:\nDocument Title: Oven Cal V2 A8F93A\n\n- Updated 2026 calibration standard (a8f93a) for commercial convection ovens. Temperature accuracy var",
+      "Air Fryer Cleaning C8A232": "Overall Summary of Air Fryer Cleaning C8A232:\nDocument Title: Air Fryer Cleaning C8A232\n\n- Unplug appliance before disassembly (c8a232). Soak basket in warm soapy water for 20 minutes. Use no",
+      "Coffee Guide V1 Ab6D30": "Overall Summary of Coffee Guide V1 Ab6D30:\nDocument Title: Coffee Guide V1 Ab6D30\n\n- Espresso extraction (ab6d30) requires a 1:2 ratio of dry ground coffee to liquid espresso in 25 to 30 seconds. The brew water temperature should be maintained between 90 and 96 degrees Celsius.",
+      "Oven Cal V1 6E78Cc": "Overall Summary of Oven Cal V1 6E78Cc:\nDocument Title: Oven Cal V1 6E78Cc\n\n- Original factory calibration standard (6e78cc) for convection ovens. Temperature accuracy variance i",
+      "Oven Cal V2 6E78Cc": "Overall Summary of Oven Cal V2 6E78Cc:\nDocument Title: Oven Cal V2 6E78Cc\n\n- Updated 2026 calibration standard (6e78cc) for commercial convection ovens. Temperature accuracy var",
+      "Air Fryer Cleaning 73880B": "Overall Summary of Air Fryer Cleaning 73880B:\nDocument Title: Air Fryer Cleaning 73880B\n\n- Unplug appliance before disassembly (73880b). Soak basket in warm soapy water for 20 minutes. Use no",
+      "Coffee Guide V1 666574": "Overall Summary of Coffee Guide V1 666574:\nDocument Title: Coffee Guide V1 666574\n\n- Espresso extraction (666574) requires a 1:2 ratio of dry ground coffee to liquid espresso in 25 to 30 seconds. The brew water temperature should be maintained between 90 and 96 degrees Celsius.",
+      "Oven Cal V1 3A835C": "Overall Summary of Oven Cal V1 3A835C:\nDocument Title: Oven Cal V1 3A835C\n\n- Original factory calibration standard (3a835c) for convection ovens. Temperature accuracy variance i",
+      "Oven Cal V2 3A835C": "Overall Summary of Oven Cal V2 3A835C:\nDocument Title: Oven Cal V2 3A835C\n\n- Updated 2026 calibration standard (3a835c) for commercial convection ovens. Temperature accuracy var",
+      "Air Fryer Cleaning 728680": "Overall Summary of Air Fryer Cleaning 728680:\nDocument Title: Air Fryer Cleaning 728680\n\n- Unplug appliance before disassembly (728680). Soak basket in warm soapy water for 20 minutes. Use no",
+      "Coffee Guide V1 E5Fb61": "Overall Summary of Coffee Guide V1 E5Fb61:\nDocument Title: Coffee Guide V1 E5Fb61\n\n- Espresso extraction (e5fb61) requires a 1:2 ratio of dry ground coffee to liquid espresso in 25 to 30 seconds. The brew water temperature should be maintained between 90 and 96 degrees Celsius.",
+      "Oven Cal V1 345186": "Overall Summary of Oven Cal V1 345186:\nDocument Title: Oven Cal V1 345186\n\n- Original factory calibration standard (345186) for convection ovens. Temperature accuracy variance i",
+      "Oven Cal V2 345186": "Overall Summary of Oven Cal V2 345186:\nDocument Title: Oven Cal V2 345186\n\n- Updated 2026 calibration standard (345186) for commercial convection ovens. Temperature accuracy var",
+      "Air Fryer Cleaning D6091C": "Overall Summary of Air Fryer Cleaning D6091C:\nDocument Title: Air Fryer Cleaning D6091C\n\n- Unplug appliance before disassembly (d6091c). Soak basket in warm soapy water for 20 minutes. Use no",
+      "Coffee Guide V1 112398": "Overall Summary of Coffee Guide V1 112398:\nDocument Title: Coffee Guide V1 112398\n\n- Espresso extraction (112398) requires a 1:2 ratio of dry ground coffee to liquid espresso in 25 to 30 seconds. The brew water temperature should be maintained between 90 and 96 degrees Celsius.",
+      "Oven Cal V1 B414C6": "Overall Summary of Oven Cal V1 B414C6:\nDocument Title: Oven Cal V1 B414C6\n\n- Original factory calibration standard (b414c6) for convection ovens. Temperature accuracy variance i",
+      "Oven Cal V2 B414C6": "Overall Summary of Oven Cal V2 B414C6:\nDocument Title: Oven Cal V2 B414C6\n\n- Updated 2026 calibration standard (b414c6) for commercial convection ovens. Temperature accuracy var",
+      "Air Fryer Cleaning 866055": "Overall Summary of Air Fryer Cleaning 866055:\nDocument Title: Air Fryer Cleaning 866055\n\n- Unplug appliance before disassembly (866055). Soak basket in warm soapy water for 20 minutes. Use no",
+      "Coffee Guide V1 C7C75F": "Overall Summary of Coffee Guide V1 C7C75F:\nDocument Title: Coffee Guide V1 C7C75F\n\n- Espresso extraction (c7c75f) requires a 1:2 ratio of dry ground coffee to liquid espresso in 25 to 30 seconds. The brew water temperature should be maintained between 90 and 96 degrees Celsius.",
+      "Oven Cal V1 Adbd34": "Overall Summary of Oven Cal V1 Adbd34:\nDocument Title: Oven Cal V1 Adbd34\n\n- Original factory calibration standard (adbd34) for convection ovens. Temperature accuracy variance i",
+      "Oven Cal V2 Adbd34": "Overall Summary of Oven Cal V2 Adbd34:\nDocument Title: Oven Cal V2 Adbd34\n\n- Updated 2026 calibration standard (adbd34) for commercial convection ovens. Temperature accuracy var",
+      "Air Fryer Cleaning 834034": "Overall Summary of Air Fryer Cleaning 834034:\nDocument Title: Air Fryer Cleaning 834034\n\n- Unplug appliance before disassembly (834034). Soak basket in warm soapy water for 20 minutes. Use no",
+      "Coffee Guide V1 Bd35F9": "Overall Summary of Coffee Guide V1 Bd35F9:\nDocument Title: Coffee Guide V1 Bd35F9\n\n- Espresso extraction (bd35f9) requires a 1:2 ratio of dry ground coffee to liquid espresso in 25 to 30 seconds. The brew water temperature should be maintained between 90 and 96 degrees Celsius.",
+      "Oven Cal V1 222656": "Overall Summary of Oven Cal V1 222656:\nDocument Title: Oven Cal V1 222656\n\n- Original factory calibration standard (222656) for convection ovens. Temperature accuracy variance i",
+      "Oven Cal V2 222656": "Overall Summary of Oven Cal V2 222656:\nDocument Title: Oven Cal V2 222656\n\n- Updated 2026 calibration standard (222656) for commercial convection ovens. Temperature accuracy var",
+      "Air Fryer Cleaning Bb5Bd5": "Overall Summary of Air Fryer Cleaning Bb5Bd5:\nDocument Title: Air Fryer Cleaning Bb5Bd5\n\n- Unplug appliance before disassembly (bb5bd5). Soak basket in warm soapy water for 20 minutes. Use no"
     }
   },
   {
@@ -232,5 +296,76 @@
       "enterprise"
     ],
     "summaries": {}
+  },
+  {
+    "skill_id": "dynamic_general_home",
+    "name": "General Home",
+    "namespace": "general_home",
+    "description": "Dynamic domain for general_home",
+    "keywords": [
+      "valid",
+      "short"
+    ],
+    "file_patterns": [],
+    "exemplars": [
+      "Valid Title"
+    ],
+    "allowed_tiers": [
+      "free",
+      "premium",
+      "scholar",
+      "enterprise"
+    ],
+    "summaries": {
+      "Valid Title": "Overall Summary of Valid Title:\nDocument Title: Valid Title\n\n- Short"
+    }
+  },
+  {
+    "skill_id": "dynamic_kitchenware",
+    "name": "Kitchenware",
+    "namespace": "kitchenware",
+    "description": "Dynamic domain for kitchenware",
+    "keywords": [
+      "knife",
+      "sharpening",
+      "guide",
+      "submerge",
+      "whetstones",
+      "water",
+      "until",
+      "bubbles",
+      "cease",
+      "maintain",
+      "consistent",
+      "degree",
+      "bevel",
+      "angle"
+    ],
+    "file_patterns": [],
+    "exemplars": [
+      "Knife Sharpening Guide"
+    ],
+    "allowed_tiers": [
+      "free",
+      "premium",
+      "scholar",
+      "enterprise"
+    ],
+    "summaries": {
+      "Knife Sharpening Guide": "Overall Summary of Knife Sharpening Guide:\nDocument Title: Knife Sharpening Guide\n\n- Submerge whetstones in water until bubbles cease. Maintain a consistent 15 to 20 degree bevel angle",
+      "Knife Sharpening 20Dbdd": "Overall Summary of Knife Sharpening 20Dbdd:\nDocument Title: Knife Sharpening 20Dbdd\n\n- Submerge whetstones (20dbdd) in water until bubbles cease. Maintain a consistent 15 to 20 degree bev",
+      "Knife Sharpening 5Cda8F": "Overall Summary of Knife Sharpening 5Cda8F:\nDocument Title: Knife Sharpening 5Cda8F\n\n- Submerge whetstones (5cda8f) in water until bubbles cease. Maintain a consistent 15 to 20 degree bev",
+      "Knife Sharpening 6C82D0": "Overall Summary of Knife Sharpening 6C82D0:\nDocument Title: Knife Sharpening 6C82D0\n\n- Submerge whetstones (6c82d0) in water until bubbles cease. Maintain a consistent 15 to 20 degree bev",
+      "Knife Sharpening 5Cc10D": "Overall Summary of Knife Sharpening 5Cc10D:\nDocument Title: Knife Sharpening 5Cc10D\n\n- Submerge whetstones (5cc10d) in water until bubbles cease. Maintain a consistent 15 to 20 degree bev",
+      "Knife Sharpening 2E122A": "Overall Summary of Knife Sharpening 2E122A:\nDocument Title: Knife Sharpening 2E122A\n\n- Submerge whetstones (2e122a) in water until bubbles cease. Maintain a consistent 15 to 20 degree bev",
+      "Knife Sharpening Bb54D2": "Overall Summary of Knife Sharpening Bb54D2:\nDocument Title: Knife Sharpening Bb54D2\n\n- Submerge whetstones (bb54d2) in water until bubbles cease. Maintain a consistent 15 to 20 degree bev",
+      "Knife Sharpening 2Efa9E": "Overall Summary of Knife Sharpening 2Efa9E:\nDocument Title: Knife Sharpening 2Efa9E\n\n- Submerge whetstones (2efa9e) in water until bubbles cease. Maintain a consistent 15 to 20 degree bev",
+      "Knife Sharpening 16Db10": "Overall Summary of Knife Sharpening 16Db10:\nDocument Title: Knife Sharpening 16Db10\n\n- Submerge whetstones (16db10) in water until bubbles cease. Maintain a consistent 15 to 20 degree bev",
+      "Knife Sharpening 0F8F62": "Overall Summary of Knife Sharpening 0F8F62:\nDocument Title: Knife Sharpening 0F8F62\n\n- Submerge whetstones (0f8f62) in water until bubbles cease. Maintain a consistent 15 to 20 degree bev",
+      "Knife Sharpening E91A9C": "Overall Summary of Knife Sharpening E91A9C:\nDocument Title: Knife Sharpening E91A9C\n\n- Submerge whetstones (e91a9c) in water until bubbles cease. Maintain a consistent 15 to 20 degree bev",
+      "Knife Sharpening 604407": "Overall Summary of Knife Sharpening 604407:\nDocument Title: Knife Sharpening 604407\n\n- Submerge whetstones (604407) in water until bubbles cease. Maintain a consistent 15 to 20 degree bev",
+      "Knife Sharpening 320Aa9": "Overall Summary of Knife Sharpening 320Aa9:\nDocument Title: Knife Sharpening 320Aa9\n\n- Submerge whetstones (320aa9) in water until bubbles cease. Maintain a consistent 15 to 20 degree bev",
+      "Knife Sharpening E08C26": "Overall Summary of Knife Sharpening E08C26:\nDocument Title: Knife Sharpening E08C26\n\n- Submerge whetstones (e08c26) in water until bubbles cease. Maintain a consistent 15 to 20 degree bev"
+    }
   }
 ]

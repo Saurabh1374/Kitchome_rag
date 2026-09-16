@@ -10,11 +10,13 @@ class GroundedGenerator:
     def format_parent_context_prompt(
         self, 
         query: str, 
-        retrieved_chunks: List[Dict[str, Any]]
+        retrieved_chunks: List[Dict[str, Any]],
+        document_summaries: Optional[Dict[str, str]] = None
     ) -> Dict[str, Any]:
         """
         Assembles prompt with Parent-Context Injection:
         Groups chunks by parent document, prepends document summary header, and lists excerpts.
+        Resolves summary from document_summaries map or chunk metadata.
         """
         # Deduplicate parent documents and group excerpts
         doc_groups: Dict[str, Dict[str, Any]] = {}
@@ -23,6 +25,8 @@ class GroundedGenerator:
             meta = c.get("metadata", {})
             title = meta.get("document_title", meta.get("filename", "Document"))
             doc_summary = meta.get("doc_summary", "")
+            if not doc_summary and document_summaries and doc_id in document_summaries:
+                doc_summary = document_summaries[doc_id]
 
             breadcrumb = meta.get("breadcrumb") or title
             section_heading = meta.get("section_heading") or title
@@ -58,28 +62,26 @@ class GroundedGenerator:
                 section_tag = f" (Section: {ex['breadcrumb']})" if ex.get("breadcrumb") else ""
                 prompt_lines.append(f"  [Chunk {ex['chunk_id']}{section_tag} (Score: {ex['similarity_score']})]: {ex['text']}")
                 citations.append({
+                    "chunk_id": ex["chunk_id"],
                     "document_id": doc_id,
                     "document_title": doc_data["title"],
+                    "similarity_score": ex["similarity_score"],
                     "breadcrumb": ex["breadcrumb"],
-                    "section_heading": ex["section_heading"],
-                    "chunk_id": ex["chunk_id"],
-                    "similarity_score": ex["similarity_score"]
+                    "section_heading": ex["section_heading"]
                 })
 
-        prompt_lines.append("\n=== INSTRUCTIONS ===")
-        prompt_lines.append("Synthesize a concise, accurate response strictly grounded in the excerpts above. Include citation references.")
-
+        formatted_prompt = "\n".join(prompt_lines)
         return {
-            "formatted_prompt": "\n".join(prompt_lines),
+            "formatted_prompt": formatted_prompt,
             "citations": citations,
-            "document_count": len(doc_groups),
-            "chunk_count": len(retrieved_chunks)
+            "doc_groups": doc_groups
         }
 
     def synthesize(
         self, 
         query: str, 
-        retrieved_chunks: List[Dict[str, Any]]
+        retrieved_chunks: List[Dict[str, Any]],
+        document_summaries: Optional[Dict[str, str]] = None
     ) -> Dict[str, Any]:
         """
         Generates a grounded answer with parent-context citations.
@@ -91,7 +93,9 @@ class GroundedGenerator:
                 "grounded": False
             }
 
-        prompt_meta = self.format_parent_context_prompt(query, retrieved_chunks)
+        prompt_meta = self.format_parent_context_prompt(
+            query, retrieved_chunks, document_summaries=document_summaries
+        )
         
         # Build synthesis text with citation tags
         lead_chunk = retrieved_chunks[0]

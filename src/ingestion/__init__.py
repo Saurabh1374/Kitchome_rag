@@ -16,9 +16,9 @@ from .pipeline import IngestionPipeline
 from .cursor import IngestionCursorManager, IngestionCursorRecord
 from .queue import IngestionQueueManager, IngestionQueueJob, IngestionChunkJob, IngestionWorkerRecord
 from .controller import IngestionController
-from .worker import IngestionWorker, ChunkerWorker, EmbedderWorker
 from .run_workers import WorkerSupervisor
 from .parser import LocalDocumentParser
+from .history import IngestionHistoryManager, IngestionHistoryRecord, local_ingestion_history_manager
 
 __all__ = [
     "RawDocument", 
@@ -47,5 +47,8 @@ __all__ = [
     "ChunkerWorker",
     "EmbedderWorker",
     "WorkerSupervisor",
-    "LocalDocumentParser"
+    "LocalDocumentParser",
+    "IngestionHistoryRecord",
+    "IngestionHistoryManager",
+    "local_ingestion_history_manager"
 ]

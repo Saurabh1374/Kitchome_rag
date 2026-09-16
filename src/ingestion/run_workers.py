@@ -118,6 +118,7 @@ class WorkerSupervisor:
                 )
                 self.workers.append(t)
                 t.start()
+                logger.debug(f"Spawned ChunkerWorker {w_id} ({worker_cls.__name__})")
 
         if self.role in ("all", "embedder"):
             for i in range(self.embedder_concurrency):
@@ -129,6 +130,7 @@ class WorkerSupervisor:
                 )
                 self.workers.append(t)
                 t.start()
+                logger.debug(f"Spawned EmbedderWorker {w_id} ({worker_cls.__name__}, batch_size={self.batch_size})")
 
         if self.role == "unified":
             w_id = f"unified_{self.mode}_1"
@@ -139,6 +141,7 @@ class WorkerSupervisor:
             )
             self.workers.append(t)
             t.start()
+            logger.debug(f"Spawned IngestionWorker {w_id} ({worker_cls.__name__})")
 
         logger.info(
             f"WorkerSupervisor started {len(self.workers)} workers "
@@ -267,6 +270,14 @@ def main():
         embedder_overrides["dimension"] = args.embedder_dimension
     if args.embedder_device:
         embedder_overrides["device"] = args.embedder_device
+
+    logger.info(
+        f"Starting WorkerSupervisor CLI: role='{args.role}', mode='{args.mode}', "
+        f"chunkers={args.chunker_concurrency}, embedders={args.embedder_concurrency}, "
+        f"batch_size={args.batch_size}, poll_interval={args.poll_interval}s"
+    )
+    if embedder_overrides:
+        logger.debug(f"Applied embedder overrides: {embedder_overrides}")
 
     supervisor = WorkerSupervisor(
         role=args.role,

@@ -67,3 +67,20 @@ class ABACPolicyEngine:
             "permitted_tiers": permitted_tiers,
             "max_clearance": user.clearance_level
         }
+
+    @classmethod
+    def get_rls_session_vars(cls, user: UserContext) -> Dict[str, str]:
+        """
+        Generates PostgreSQL session settings (for SET LOCAL) to enforce RLS at the kernel level.
+        """
+        user_tier = user.tier if isinstance(user.tier, UserTier) else UserTier(user.tier)
+        user_rank = cls.TIER_HIERARCHY.get(user_tier, 1)
+        permitted_tiers = [
+            tier.value for tier, rank in cls.TIER_HIERARCHY.items() 
+            if rank <= user_rank
+        ]
+        return {
+            "app.current_tenant": str(user.tenant_id),
+            "app.permitted_tiers": ",".join(permitted_tiers),
+            "app.clearance_level": str(user.clearance_level)
+        }

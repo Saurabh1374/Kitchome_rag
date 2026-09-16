@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: "Kitchome Dashboards"
+    orgId: 1
+    folder: "Kitchome RAG"
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

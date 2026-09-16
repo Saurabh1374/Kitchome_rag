@@ -16,7 +16,8 @@ from .embedder import BaseEmbedder, get_embedder, EmbeddingEngine
 from .cursor import IngestionCursorManager, IngestionCursorRecord
 from .queue import IngestionQueueManager, IngestionQueueJob
 from .parser import LocalDocumentParser
-from ..vector_store.base import NamespaceVectorStore, VectorChunk
+from ..vector_store.base import NamespaceVectorStore, VectorChunk, DocumentSummaryRecord
+from ..vector_store.factory import get_vector_store
 from ..skills_ms.router import SkillsRouter
 
 logger = logging.getLogger(__name__)
@@ -245,7 +246,7 @@ class EmbedderWorker:
         self.worker_id = worker_id or f"embedder_{socket.gethostname()}_{os.getpid()}_{uuid.uuid4().hex[:4]}"
         self.cursor_mgr = cursor_manager or IngestionCursorManager()
         self.queue_mgr = queue_manager or IngestionQueueManager()
-        self.vector_store = vector_store or NamespaceVectorStore()
+        self.vector_store = vector_store or get_vector_store()
         self.embedder = embedder or get_embedder()
         self.batch_size = batch_size if batch_size is not None else app_config.embedder.batch_size
         self.lease_seconds = lease_seconds
@@ -363,6 +364,26 @@ class EmbedderWorker:
                 )
             ])
 
+        # Store in dedicated document_summaries table
+        if doc_summary and hasattr(self.vector_store, "upsert_summary"):
+            summary_emb_val = summary_emb if (self.index_summary_chunk and 'summary_emb' in locals()) else (self.embedder.embed_text(doc_summary) if self.embedder else None)
+            self.vector_store.upsert_summary(DocumentSummaryRecord(
+                document_id=batch["document_id"],
+                namespace=first_meta.get("target_namespace", "general"),
+                document_title=first_meta.get("document_title", ""),
+                summary_text=doc_summary,
+                token_count=len(doc_summary.split()),
+                embedding=summary_emb_val,
+                access_tier=first_meta.get("access_tier", "free"),
+                tenant_id=first_meta.get("tenant_id", "global"),
+                clearance_level=first_meta.get("clearance_level", 1),
+                metadata={
+                    "title": first_meta.get("document_title", ""),
+                    "doc_family": batch["doc_family"],
+                    "version": batch["version"]
+                }
+            ))
+
         # Advance Cursor
         cursor_status = "ACTIVE_DEGRADED" if is_degraded else "ACTIVE"
         cursor_record = IngestionCursorRecord(
@@ -385,6 +406,20 @@ class EmbedderWorker:
         # Complete Queue Job & purge ephemeral staging table
         queue_status = "COMPLETED_DEGRADED" if is_degraded else "COMPLETED"
         self.queue_mgr.complete_job(job_id, self.worker_id, status=queue_status)
+
+        # Synchronize with Ingestion History if job exists there
+        try:
+            from .history import local_ingestion_history_manager
+            hist_job = local_ingestion_history_manager.get_job(job_id)
+            if hist_job and hist_job.status not in ("COMPLETED", "FAILED"):
+                local_ingestion_history_manager.record_success(
+                    job_id=job_id,
+                    namespace=first_meta.get("target_namespace", "general_home"),
+                    chunks_ingested=barrier_res.get("actual_total_chunks") or len(chunks),
+                    summary=doc_summary
+                )
+        except Exception as e:
+            logger.debug("History sync optional notice: %s", e)
 
         return {
             "status": queue_status,
@@ -589,7 +624,7 @@ class IngestionWorker:
         self.worker_id = worker_id or f"worker_{socket.gethostname()}_{os.getpid()}_{uuid.uuid4().hex[:4]}"
         self.cursor_mgr = cursor_manager or IngestionCursorManager()
         self.queue_mgr = queue_manager or IngestionQueueManager()
-        self.vector_store = vector_store or NamespaceVectorStore()
+        self.vector_store = vector_store or get_vector_store()
         self.router = router or SkillsRouter()
         self.chunker = chunker or TextChunker()
         self.summarizer = summarizer or DocumentSummarizer()

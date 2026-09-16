@@ -18,3 +18,6 @@ class UserContext(BaseModel):
     tenant_id: str = "global"
     clearance_level: int = 1  # 1 = Public, 2 = Internal, 3 = Confidential
     custom_allowed_namespaces: Optional[List[str]] = None
+    trace_id: Optional[str] = None
+    role: Optional[str] = None
+    granted_scopes: Optional[List[str]] = None

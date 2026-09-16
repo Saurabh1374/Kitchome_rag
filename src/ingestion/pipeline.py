@@ -1,6 +1,7 @@
 from typing import List, Dict, Any, Optional
 from ..skills_ms.router import SkillsRouter
-from ..vector_store.base import NamespaceVectorStore, VectorChunk
+from ..vector_store.base import NamespaceVectorStore, VectorChunk, DocumentSummaryRecord
+from ..vector_store.factory import get_vector_store
 from .loader import RawDocument, DocumentLoader
 from .chunker import TextChunker
 from .summarizer import DocumentSummarizer
@@ -22,7 +23,7 @@ class IngestionPipeline:
         index_summary_chunk: bool = False
     ):
         self.router = router or SkillsRouter()
-        self.vector_store = vector_store or NamespaceVectorStore()
+        self.vector_store = vector_store or get_vector_store()
         self.chunker = chunker or TextChunker()
         self.summarizer = summarizer or DocumentSummarizer()
         self.embedder = embedder or EmbeddingEngine()
@@ -90,6 +91,22 @@ class IngestionPipeline:
                 embedding=emb
             ))
 
+        # 7. Dedicated Document Summary Table Upsert
+        if doc_summary and hasattr(self.vector_store, "upsert_summary"):
+            summary_emb = self.embedder.embed_text(doc_summary)
+            self.vector_store.upsert_summary(DocumentSummaryRecord(
+                document_id=document.document_id,
+                namespace=target_namespace,
+                document_title=document.title,
+                summary_text=doc_summary,
+                token_count=self.summarizer.estimate_tokens(doc_summary),
+                embedding=summary_emb,
+                access_tier=document.access_tier,
+                tenant_id=document.tenant_id,
+                clearance_level=document.clearance_level,
+                metadata={"title": document.title}
+            ))
+
         # Optional Dual-Resolution: Index document summary as a first-class chunk
         if self.index_summary_chunk and doc_summary:
             summary_emb = self.embedder.embed_text(doc_summary)
@@ -110,7 +127,7 @@ class IngestionPipeline:
                 embedding=summary_emb
             ))
 
-        # 7. Upsert into vector store under target namespace
+        # 8. Upsert chunks into vector store under target namespace
         upsert_count = self.vector_store.upsert_chunks(vector_chunks)
 
         return {
@@ -119,7 +136,120 @@ class IngestionPipeline:
             "namespace": target_namespace,
             "chunks_ingested": upsert_count,
             "doc_summary_tokens": self.summarizer.estimate_tokens(doc_summary),
-            "doc_summary": doc_summary
+            "doc_summary": doc_summary,
+            "summary": doc_summary
+        }
+
+    def ingest_file(
+        self,
+        file_path: str,
+        document_id: str,
+        title: str,
+        tenant_id: str = "global",
+        clearance_level: int = 1,
+        access_tier: str = "free",
+        declared_domain: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Streaming file ingestion from a stored disk path.
+        Parses format, summarizes using file stream, generates chunks lazily in batches,
+        and flushes to vector store with bounded RAM.
+        """
+        import os
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Target document file missing: {file_path}")
+
+        # 1. Preview text for namespace routing to avoid excessive reads
+        preview_text = ""
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            preview_text = f.read(4096)
+
+        target_namespace = self.router.resolve_namespace_for_document(
+            file_path=file_path,
+            content=preview_text,
+            declared_domain=declared_domain
+        )
+
+        # 2. Summarize document directly from file stream
+        doc_summary, extracted_keywords = self.summarizer.process_and_summarize_file(
+            document_title=title,
+            file_path=file_path
+        )
+
+        # 3. Update skills.ms registry & runtime properties file dynamically
+        self.router.registry.update_dynamic_summary(
+            namespace=target_namespace,
+            document_title=title,
+            summary=doc_summary,
+            extra_keywords=extracted_keywords
+        )
+
+        # 4. Construct RawDocument representation
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            content = f.read()
+
+        raw_doc = RawDocument(
+            document_id=document_id,
+            title=title,
+            source_path=file_path,
+            content=content,
+            declared_domain=declared_domain,
+            access_tier=access_tier,
+            tenant_id=tenant_id,
+            clearance_level=clearance_level,
+            metadata=metadata or {}
+        )
+
+        # 5. Chunk and embed in streaming micro-batches (32 chunks per batch)
+        total_ingested = 0
+        for batch_chunks in self.chunker.chunk_document_stream(raw_doc, namespace=target_namespace, batch_size=32):
+            texts = [c.text for c in batch_chunks]
+            embeddings = self.embedder.embed_batch(texts)
+            vector_batch = []
+            for tc, emb in zip(batch_chunks, embeddings):
+                tc.metadata["doc_summary"] = doc_summary
+                tc.metadata["document_title"] = title
+                tc.metadata["access_tier"] = access_tier
+                tc.metadata["tenant_id"] = tenant_id
+                tc.metadata["clearance_level"] = clearance_level
+                tc.metadata["is_summary"] = False
+                tc.metadata["chunk_type"] = "content"
+                vector_batch.append(VectorChunk(
+                    chunk_id=tc.chunk_id,
+                    document_id=tc.document_id,
+                    namespace=target_namespace,
+                    text=tc.text,
+                    metadata=tc.metadata,
+                    embedding=emb
+                ))
+            total_ingested += self.vector_store.upsert_chunks(vector_batch)
+
+        # 6. Dedicated Document Summary Table Upsert
+        if doc_summary and hasattr(self.vector_store, "upsert_summary"):
+            summary_emb = self.embedder.embed_text(doc_summary)
+            self.vector_store.upsert_summary(DocumentSummaryRecord(
+                document_id=document_id,
+                namespace=target_namespace,
+                document_title=title,
+                summary_text=doc_summary,
+                token_count=self.summarizer.estimate_tokens(doc_summary),
+                embedding=summary_emb,
+                access_tier=access_tier,
+                tenant_id=tenant_id,
+                clearance_level=clearance_level,
+                metadata={"title": title}
+            ))
+
+        return {
+            "document_id": document_id,
+            "title": title,
+            "namespace": target_namespace,
+            "chunks_ingested": total_ingested,
+            "doc_summary_tokens": self.summarizer.estimate_tokens(doc_summary),
+            "doc_summary": doc_summary,
+            "summary": doc_summary,
+            "file_path": file_path
         }
 
     def ingest_directory(self, dir_path: str, declared_domain: Optional[str] = None) -> List[Dict[str, Any]]:

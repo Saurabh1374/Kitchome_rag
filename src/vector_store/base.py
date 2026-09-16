@@ -12,14 +12,29 @@ class VectorChunk(BaseModel):
     metadata: Dict[str, Any] = Field(default_factory=dict)
     embedding: List[float] = Field(default_factory=list)
 
+class DocumentSummaryRecord(BaseModel):
+    document_id: str
+    namespace: str
+    document_title: str
+    summary_text: str
+    token_count: int = 0
+    embedding: List[float] = Field(default_factory=list)
+    access_tier: str = "free"
+    tenant_id: str = "global"
+    clearance_level: int = 1
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
 class NamespaceVectorStore:
     """
     Partitioned Vector Store where vectors belong to explicit namespaces (skills.ms index namespaces).
+    Supports dedicated document summaries and ABAC metadata filtering.
     """
     def __init__(self, storage_path: Optional[str] = None):
         self.storage_path = storage_path
         # Map: namespace -> List[VectorChunk]
         self._namespaces: Dict[str, List[VectorChunk]] = {}
+        # Map: document_id -> DocumentSummaryRecord
+        self._summaries: Dict[str, DocumentSummaryRecord] = {}
         if storage_path and os.path.exists(storage_path):
             self.load_from_file(storage_path)
 
@@ -129,15 +144,122 @@ class NamespaceVectorStore:
         results.sort(key=lambda x: x["similarity_score"], reverse=True)
         return results[:top_k]
 
+    def upsert_summary(self, summary: DocumentSummaryRecord) -> str:
+        """Stores or updates a dedicated document summary record."""
+        self._summaries[summary.document_id] = summary
+        if self.storage_path:
+            self.save_to_file(self.storage_path)
+        return summary.document_id
+
+    def get_summary(self, document_id: str, abac_filter: Optional[Dict[str, Any]] = None) -> Optional[DocumentSummaryRecord]:
+        """Retrieves a single parent document summary by document_id, applying ABAC permissions if specified."""
+        summary = self._summaries.get(document_id)
+        if not summary:
+            return None
+        if abac_filter:
+            user_tenant = abac_filter.get("tenant_id", "global")
+            if summary.tenant_id != "global" and summary.tenant_id != user_tenant:
+                return None
+            permitted_tiers = abac_filter.get("permitted_tiers")
+            if permitted_tiers and summary.access_tier not in permitted_tiers:
+                return None
+            max_clearance = abac_filter.get("max_clearance")
+            if max_clearance is not None and summary.clearance_level > max_clearance:
+                return None
+        return summary
+
+    def get_summaries(self, document_ids: List[str], abac_filter: Optional[Dict[str, Any]] = None) -> Dict[str, DocumentSummaryRecord]:
+        """Batch retrieves parent document summaries for a list of document IDs, applying ABAC permissions."""
+        results = {}
+        for doc_id in document_ids:
+            if doc_id in self._summaries:
+                summary = self.get_summary(doc_id, abac_filter=abac_filter)
+                if summary:
+                    results[doc_id] = summary
+        return results
+
+    def delete_summary(self, document_id: str) -> bool:
+        """Deletes a document summary record by document_id."""
+        if document_id in self._summaries:
+            del self._summaries[document_id]
+            if self.storage_path:
+                self.save_to_file(self.storage_path)
+            return True
+        return False
+
+    def search_summaries(
+        self,
+        query_vector: List[float],
+        namespace: Any,
+        top_k: int = 3,
+        abac_filter: Optional[Dict[str, Any]] = None
+    ) -> List[Dict[str, Any]]:
+        """Searches dedicated document summaries using cosine similarity and ABAC filters."""
+        if isinstance(namespace, str):
+            target_namespaces = [namespace]
+        elif isinstance(namespace, (list, set)):
+            target_namespaces = list(namespace)
+        else:
+            target_namespaces = []
+
+        query_arr = np.array(query_vector, dtype=np.float32)
+        norm_q = np.linalg.norm(query_arr)
+
+        candidates = [
+            s for s in self._summaries.values()
+            if not target_namespaces or s.namespace in target_namespaces
+        ]
+
+        # Apply ABAC filter
+        if abac_filter:
+            user_tenant = abac_filter.get("tenant_id", "global")
+            permitted_tiers = abac_filter.get("permitted_tiers")
+            max_clearance = abac_filter.get("max_clearance")
+            filtered = []
+            for s in candidates:
+                if s.tenant_id != "global" and s.tenant_id != user_tenant:
+                    continue
+                if permitted_tiers and s.access_tier not in permitted_tiers:
+                    continue
+                if max_clearance is not None and s.clearance_level > max_clearance:
+                    continue
+                filtered.append(s)
+            candidates = filtered
+
+        results = []
+        for s in candidates:
+            if not s.embedding:
+                continue
+            s_arr = np.array(s.embedding, dtype=np.float32)
+            norm_s = np.linalg.norm(s_arr)
+            sim = 0.0 if (norm_q == 0 or norm_s == 0) else float(np.dot(query_arr, s_arr) / (norm_q * norm_s))
+            results.append({
+                "document_id": s.document_id,
+                "namespace": s.namespace,
+                "document_title": s.document_title,
+                "summary_text": s.summary_text,
+                "token_count": s.token_count,
+                "similarity_score": round(sim, 4),
+                "metadata": s.metadata
+            })
+
+        results.sort(key=lambda x: x["similarity_score"], reverse=True)
+        return results[:top_k]
+
     def delete_chunks_by_document_id(self, document_id: str) -> int:
         """
         Physically deletes all chunks matching document_id across all namespaces (for Quash).
+        Also removes the parent summary if present.
         """
         deleted_count = 0
         for ns in list(self._namespaces.keys()):
             before_len = len(self._namespaces[ns])
             self._namespaces[ns] = [c for c in self._namespaces[ns] if c.document_id != document_id]
             deleted_count += (before_len - len(self._namespaces[ns]))
+        
+        if document_id in self._summaries:
+            del self._summaries[document_id]
+
         if self.storage_path and deleted_count > 0:
             self.save_to_file(self.storage_path)
         return deleted_count
@@ -182,6 +304,8 @@ class NamespaceVectorStore:
         serialized = {}
         for ns, chunks in self._namespaces.items():
             serialized[ns] = [chunk.model_dump() for chunk in chunks]
+        if self._summaries:
+            serialized["__document_summaries__"] = {k: v.model_dump() for k, v in self._summaries.items()}
         
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(serialized, f, indent=2)
@@ -191,5 +315,9 @@ class NamespaceVectorStore:
             data = json.load(f)
         
         self._namespaces = {}
+        self._summaries = {}
         for ns, chunks_data in data.items():
-            self._namespaces[ns] = [VectorChunk(**c) for c in chunks_data]
+            if ns == "__document_summaries__":
+                self._summaries = {k: DocumentSummaryRecord(**v) for k, v in chunks_data.items()}
+            elif isinstance(chunks_data, list):
+                self._namespaces[ns] = [VectorChunk(**c) for c in chunks_data]
